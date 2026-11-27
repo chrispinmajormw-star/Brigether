@@ -5,7 +5,7 @@
     "dev": "next dev -p 3000",
     "build": "next build",
     "start": "next start -p 3000",
-    "export": "next export",
+    "export": "next build",
     "deploy": "pnpm build && pnpm export && git subtree push --prefix out origin gh-pages"
   },
   "dependencies": {
