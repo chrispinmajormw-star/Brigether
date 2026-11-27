@@ -1,0 +1,33 @@
+export const strings = {
+  brand: 'Brigether',
+  tagline: 'Brigether — bringing people together.',
+  signIn: 'Sign in',
+  signUp: 'Create account',
+  signOut: 'Sign out',
+  email: 'Email',
+  password: 'Password',
+  displayName: 'Display name',
+  startMeeting: 'Start a meeting',
+  joinMeeting: 'Join a meeting',
+  meetingCode: 'Meeting code',
+  enterCode: 'Enter a meeting code',
+  copyLink: 'Copy link',
+  copied: 'Copied!',
+  lobby: 'Lobby',
+  micCheck: 'Microphone',
+  camCheck: 'Camera',
+  joinNow: 'Join now',
+  leave: 'Leave',
+  dashboard: 'Dashboard',
+  scheduledMeetings: 'Scheduled meetings',
+  noMeetings: 'No meetings yet. Start one!',
+  lowBandwidth: 'Low bandwidth mode',
+  loading: 'Loading…',
+  error: 'Something went wrong',
+  requiredField: 'This field is required',
+  invalidEmail: 'Enter a valid email',
+  passwordMin: 'Password must be at least 8 characters',
+} as const;
+
+type StringKey = keyof typeof strings;
+export const t = (k: StringKey) => strings[k];

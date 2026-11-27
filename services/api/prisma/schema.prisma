@@ -1,0 +1,58 @@
+generator client { provider = "prisma-client-js" }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String?
+  googleId     String?  @unique
+  displayName  String
+  avatarUrl    String?
+  timezone     String   @default("Africa/Blantyre")
+  createdAt    DateTime @default(now())
+  hostedMeetings Meeting[] @relation("MeetingHost")
+  memberships  WorkspaceMember[]
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  ownerId   String
+  createdAt DateTime @default(now())
+  members   WorkspaceMember[]
+  meetings  Meeting[]
+}
+
+model WorkspaceMember {
+  id          String   @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        String   @default("member")
+  joinedAt    DateTime @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+  @@unique([workspaceId, userId])
+}
+
+model Meeting {
+  id                 String   @id @default(uuid())
+  workspaceId        String?
+  hostId             String?
+  code               String   @unique
+  title              String
+  scheduledStart     DateTime?
+  scheduledEnd       DateTime?
+  timezone           String   @default("Africa/Blantyre")
+  status             String   @default("scheduled")
+  recordingEnabled   Boolean  @default(false)
+  lowBandwidthDefault Boolean @default(false)
+  createdAt          DateTime @default(now())
+  host               User?    @relation("MeetingHost", fields: [hostId], references: [id])
+  workspace          Workspace? @relation(fields: [workspaceId], references: [id])
+  @@index([workspaceId, scheduledStart])
+}

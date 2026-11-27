@@ -1,0 +1,53 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: brigether
+      POSTGRES_PASSWORD: brigether
+      POSTGRES_DB: brigether
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brigether"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  livekit:
+    image: livekit/livekit-server:latest
+    command: ["--config", "/etc/livekit.yaml"]
+    volumes: ["./livekit/livekit.yaml:/etc/livekit.yaml:ro"]
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "50000-50100:50000-50100/udp"
+    depends_on: [redis]
+
+  coturn:
+    image: coturn/coturn:latest
+    network_mode: host
+    volumes: ["./coturn/turnserver.conf:/etc/turnserver.conf:ro"]
+
+  api:
+    build:
+      context: ../services/api
+    env_file: ../.env
+    ports: ["4000:4000"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+    command: sh -c "npx prisma migrate deploy && node dist/main.js"
+
+  web:
+    build:
+      context: ../apps/web
+    env_file: ../.env
+    ports: ["3000:3000"]
+    depends_on: [api]
+
+volumes:
+  pgdata:
