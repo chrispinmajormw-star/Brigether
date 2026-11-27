@@ -8,7 +8,7 @@ import {
 } from '@livekit/components-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { t } from '../../../../lib/strings';
+import { t } from '../../../lib/strings';
 import '@livekit/components-react/dist/style.css';
 
 export default function RoomPage() {

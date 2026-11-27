@@ -2,6 +2,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { t } from '@/lib/strings';
+import '@livekit/components-styles';
 
 function RoomInner() {
   const search = useSearchParams();

@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from 'next';
 export const metadata: Metadata = {
   title: 'Brigether — bringing people together.',
   description: 'Online office video meetings built for teams in Malawi and Sub-Saharan Africa.',
-  manifest: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/manifest.webmanifest`,,
+  manifest: `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/manifest.webmanifest`,
 };
 
 export const viewport: Viewport = {
