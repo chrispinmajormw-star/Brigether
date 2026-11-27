@@ -3,8 +3,21 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body { background: #E9ECF6; color: #1B1B2F; font-family: 'Poppins', system-ui, sans-serif; }
-*:focus-visible { outline: 2px solid #6C63E6; outline-offset: 2px; }
+html, body { background: #FBF5E8; color: #2A1A10; font-family: 'Poppins', system-ui, sans-serif; }
+*:focus-visible { outline: 3px solid #F2A900; outline-offset: 2px; }
+
+/* Kente-style woven strip */
+.kente {
+  background-image: linear-gradient(90deg,
+    #F2A900 0 14%, #2A1A10 14% 18%, #B8481C 18% 40%, #2A1A10 40% 44%,
+    #0F6B4F 44% 66%, #2A1A10 66% 70%, #D62839 70% 86%, #F2A900 86% 100%);
+  background-size: 160px 100%;
+}
+
+/* Subtle diamond weave for dark panels */
+.diamonds {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M20 4l16 16-16 16L4 20z' fill='none' stroke='%23ffffff' stroke-opacity='.10' stroke-width='2'/%3E%3C/svg%3E");
+}
 
 .btn-primary {
   @apply bg-brand text-white px-5 py-2.5 rounded-full font-medium hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed transition inline-flex items-center justify-center gap-2;
@@ -12,8 +25,11 @@ html, body { background: #E9ECF6; color: #1B1B2F; font-family: 'Poppins', system
 .btn-gold {
   @apply bg-bubble text-white px-5 py-2.5 rounded-full font-medium hover:brightness-110 disabled:opacity-50 transition inline-flex items-center justify-center gap-2;
 }
+.btn-sun {
+  @apply bg-sun text-ink px-5 py-2.5 rounded-full font-semibold hover:brightness-105 transition inline-flex items-center justify-center gap-2;
+}
 .btn-soft {
-  @apply bg-panel text-ink px-5 py-2.5 rounded-full font-medium hover:bg-brand-soft transition inline-flex items-center justify-center gap-2;
+  @apply bg-panel text-ink px-5 py-2.5 rounded-full font-medium hover:bg-surface transition inline-flex items-center justify-center gap-2;
 }
 .btn-danger {
   @apply bg-danger text-white px-5 py-2.5 rounded-full font-medium hover:brightness-110 transition inline-flex items-center justify-center gap-2;

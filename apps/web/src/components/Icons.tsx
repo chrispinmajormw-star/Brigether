@@ -23,8 +23,14 @@ export function Icon({ name, className = 'w-5 h-5' }: { name: string; className?
   );
 }
 
+/* Rising sun over a bridge */
 export function Logo({ size = 'w-10 h-10' }: { size?: string }) {
   return (
-    <div className={`${size} rounded-full bg-brand text-white font-bold grid place-items-center`}>B</div>
+    <svg viewBox="0 0 40 40" className={size} role="img" aria-label="Brigether">
+      <circle cx="20" cy="20" r="19" fill="#0F6B4F" stroke="#F2A900" strokeWidth="2" />
+      <path d="M10 24a10 10 0 0 1 20 0z" fill="#F2A900" />
+      <path d="M7 24h26" stroke="#FBF5E8" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M10 31q10-8 20 0" fill="none" stroke="#FBF5E8" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
   );
 }
