@@ -2,7 +2,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
-import { t } from '@/lib/strings';
+import { Icon, Logo } from '@/components/Icons';
 
 function LobbyInner() {
   const search = useSearchParams();
@@ -73,7 +73,7 @@ function LobbyInner() {
   }, []);
 
   async function joinNow() {
-    if (!displayName.trim()) { setError(t('requiredField')); return; }
+    if (!displayName.trim()) { setError('Please enter your display name.'); return; }
     try {
       const tk = await api.getToken(code, displayName.trim());
       sessionStorage.setItem(
@@ -86,50 +86,55 @@ function LobbyInner() {
   }
 
   return (
-    <main id="main" className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold text-teal">{t('lobby')}</h1>
-        {meeting && <p className="text-gray-700">{meeting.title} · code {meeting.code}</p>}
-      </header>
+    <main id="main" className="min-h-screen grid place-items-center px-4 py-8">
+      <div className="card w-full max-w-4xl p-6 md:p-8 space-y-5">
+        <header className="flex items-center gap-3">
+          <Logo />
+          <div>
+            <h1 className="text-xl font-bold">{meeting ? meeting.title : 'Lobby'}</h1>
+            {meeting && <p className="text-sm text-gray-500">Code {meeting.code}</p>}
+          </div>
+        </header>
 
-      {error && <p role="alert" className="text-red-600">{error}</p>}
+        {error && <p role="alert" className="text-danger text-sm bg-danger/10 rounded-2xl px-4 py-2">{error}</p>}
 
-      <div className="card grid md:grid-cols-2 gap-4">
-        <div className="aspect-video bg-black rounded-lg overflow-hidden grid place-items-center relative">
-          <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-          {!camOn && <p className="absolute text-white/70 text-sm">Camera off</p>}
-        </div>
-
-        <div className="space-y-3">
-          <label className="block">
-            <span className="text-sm font-medium">{t('displayName')}</span>
-            <input className="input mt-1" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={60} />
-          </label>
-
-          <div className="flex gap-2 flex-wrap">
-            <button type="button" onClick={() => enableMedia(camOn)} className={micOn ? 'btn-gold' : 'btn-primary'}>
-              {t('micCheck')} {micOn ? '✓' : ''}
-            </button>
-            <button type="button" onClick={() => enableMedia(true)} className={camOn ? 'btn-gold' : 'btn-primary'}>
-              {t('camCheck')} {camOn ? '✓' : ''}
-            </button>
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="aspect-video bg-ink rounded-3xl overflow-hidden grid place-items-center relative">
+            <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+            {!camOn && <p className="absolute text-white/70 text-sm">Camera off</p>}
           </div>
 
-          {micOn && (
-            <div>
-              <p className="text-xs text-gray-600 mb-1">Mic level</p>
-              <div className="h-2 bg-gray-200 rounded">
-                <div className="h-2 bg-teal rounded transition-all" style={{ width: `${micLevel}%` }} />
-              </div>
+          <div className="space-y-4">
+            <label className="block">
+              <span className="text-sm font-medium">Your name</span>
+              <input className="input mt-1" value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={60} />
+            </label>
+
+            <div className="flex gap-2 flex-wrap">
+              <button type="button" onClick={() => enableMedia(camOn)} className={micOn ? 'btn-gold' : 'btn-soft'}>
+                <Icon name="mic" className="w-4 h-4" /> Microphone {micOn ? '✓' : ''}
+              </button>
+              <button type="button" onClick={() => enableMedia(true)} className={camOn ? 'btn-gold' : 'btn-soft'}>
+                <Icon name="video" className="w-4 h-4" /> Camera {camOn ? '✓' : ''}
+              </button>
             </div>
-          )}
 
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={lowBandwidth} onChange={(e) => setLowBandwidth(e.target.checked)} />
-            {t('lowBandwidth')}
-          </label>
+            {micOn && (
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Mic level</p>
+                <div className="h-2 bg-panel rounded-full">
+                  <div className="h-2 bg-brand rounded-full transition-all" style={{ width: `${micLevel}%` }} />
+                </div>
+              </div>
+            )}
 
-          <button className="btn-gold w-full" onClick={joinNow}>{t('joinNow')}</button>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={lowBandwidth} onChange={(e) => setLowBandwidth(e.target.checked)} />
+              Low bandwidth mode (audio only)
+            </label>
+
+            <button className="btn-primary w-full text-lg py-3" onClick={joinNow}>Join now</button>
+          </div>
         </div>
       </div>
     </main>
