@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
-import { Card, Button } from '@/packages/ui/src/components';
-import { t } from '@/lib/strings';
+import { Card, Button } from '../../../../packages/ui/src';
+import { t } from '../../lib/strings';
 
 export default function DashboardPage() {
   return (

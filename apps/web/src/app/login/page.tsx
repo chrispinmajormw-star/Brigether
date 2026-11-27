@@ -1,8 +1,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Input, Button } from '@/packages/ui/src/components';
-import { t } from '@/lib/strings';
+import { Input, Button } from '../../../../packages/ui/src';
+import { t } from '../../lib/strings';
 
 export default function LoginPage() {
   const router = useRouter();
