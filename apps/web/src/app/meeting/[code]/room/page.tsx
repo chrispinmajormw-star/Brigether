@@ -2,16 +2,14 @@
 
 import {
   LiveKitRoom,
-  ParticipantTile,
   GridLayout,
+  ParticipantTile,
   ControlBar,
-  useRoom,
 } from '@livekit/components-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { t } from '../../../../lib/strings';
 import '@livekit/components-react/dist/style.css';
-
 
 export default function RoomPage() {
   const router = useRouter();
@@ -19,7 +17,6 @@ export default function RoomPage() {
   const [lowBandwidth, setLowBandwidth] = useState(false);
 
   useEffect(() => {
-    // Extract meeting code from URL: /meeting/[code]/room
     const code = window.location.pathname.split('/')[2];
     const raw = sessionStorage.getItem(`brigether:join:${code}`);
     if (!raw) {
@@ -33,87 +30,62 @@ export default function RoomPage() {
   }, [router]);
 
   if (!joinInfo) {
-    return <main id="main" className="p-8">{t('loading')}</main>;
+    return (
+      <main className="min-h-screen flex items-center justify-center text-teal-700 text-lg">
+        {t('loading')}
+      </main>
+    );
   }
 
   const { token, url, room, displayName } = joinInfo;
-
-  // Options for LiveKit connection – adaptive streaming is disabled when low‑bandwidth mode is forced.
-  const connectOptions = {
-    autoSubscribe: true,
-    adaptiveStream: !lowBandwidth,
-  } as const;
 
   return (
     <LiveKitRoom
       token={token}
       serverUrl={url}
       roomName={room}
-      connectOptions={connectOptions}
-      videoCodec="vp8"
-      audioCodec="opus"
-      participantIdentity={displayName}
+      connectOptions={{ autoSubscribe: true, adaptiveStream: !lowBandwidth }}
+      video={!lowBandwidth}
+      audio={true}
     >
-      <RoomInner
-        displayName={displayName}
-        room={room}
-        lowBandwidth={lowBandwidth}
-        setLowBandwidth={setLowBandwidth}
-        onLeave={() => router.push('/dashboard')}
-      />
+      <div className="flex flex-col h-screen bg-gray-900 text-white">
+        {/* Header */}
+        <header className="flex items-center justify-between px-4 py-2 bg-teal-800 shadow">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded bg-yellow-400 text-gray-900 flex items-center justify-center font-bold text-sm">B</div>
+            <span className="font-semibold text-sm">{room}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Low-bandwidth toggle */}
+            <button
+              role="switch"
+              aria-checked={lowBandwidth}
+              onClick={() => setLowBandwidth(v => !v)}
+              className={`flex items-center gap-1 text-xs px-3 py-1 rounded-full border transition ${lowBandwidth ? 'bg-yellow-400 text-gray-900 border-yellow-400' : 'border-white text-white hover:bg-white/10'}`}
+            >
+              📶 {lowBandwidth ? 'Audio only' : 'Low bandwidth'}
+            </button>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="text-xs px-3 py-1 bg-red-500 hover:bg-red-400 text-white rounded-full transition"
+            >
+              {t('leave')}
+            </button>
+          </div>
+        </header>
+
+        {/* Video grid */}
+        <main className="flex-1 overflow-hidden p-2">
+          <GridLayout>
+            <ParticipantTile />
+          </GridLayout>
+        </main>
+
+        {/* Controls */}
+        <footer className="bg-gray-800 px-4 py-2 flex justify-center">
+          <ControlBar />
+        </footer>
+      </div>
     </LiveKitRoom>
-  );
-}
-
-interface RoomInnerProps {
-  displayName: string;
-  room: string;
-  lowBandwidth: boolean;
-  setLowBandwidth: (v: boolean) => void;
-  onLeave: () => void;
-}
-
-function RoomInner({ displayName, room, lowBandwidth, setLowBandwidth, onLeave }: RoomInnerProps) {
-  const { room: lkRoom } = useRoom();
-
-  // When low‑bandwidth mode is toggled, enable/disable local video publishing.
-  useEffect(() => {
-    if (!lkRoom) return;
-    if (lowBandwidth) {
-      // Turn off video – keep audio alive.
-      lkRoom.localParticipant.setVideoEnabled(false);
-    } else {
-      // Re‑enable video publishing (LiveKit will negotiate appropriate simulcast layers).
-      lkRoom.localParticipant.setVideoEnabled(true);
-    }
-  }, [lowBandwidth, lkRoom]);
-
-  return (
-    <div className="flex flex-col h-screen">
-      {/* Header */}
-      <header className="bg-teal text-white p-2 flex items-center justify-between">
-        <h1 className="text-lg font-semibold">{displayName} – {room}</h1>
-        <button className="btn-primary" onClick={onLeave}>{t('leave')}</button>
-      </header>
-
-      {/* Video Grid */}
-      <section className="flex-1 overflow-hidden">
-        <GridLayout>
-          <ParticipantTile />
-        </GridLayout>
-      </section>
-
-      {/* Footer Controls */}
-      <footer className="p-2 bg-gray-100 flex justify-center space-x-2 items-center">
-        <ControlBar showChatInDrawer={false} />
-        {/* Low‑bandwidth toggle – forces audio‑only when enabled */}
-        <button
-          className="btn-primary"
-          onClick={() => setLowBandwidth(!lowBandwidth)}
-        >
-          {lowBandwidth ? 'High‑bandwidth' : 'Low‑bandwidth'}
-        </button>
-      </footer>
-    </div>
   );
 }

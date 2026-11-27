@@ -21,12 +21,16 @@ export const strings = {
   dashboard: 'Dashboard',
   scheduledMeetings: 'Scheduled meetings',
   noMeetings: 'No meetings yet. Start one!',
+  noMeetingsYet: 'No meetings yet.',
+  createMeeting: 'Create meeting',
   lowBandwidth: 'Low bandwidth mode',
   loading: 'Loading…',
   error: 'Something went wrong',
   requiredField: 'This field is required',
   invalidEmail: 'Enter a valid email',
   passwordMin: 'Password must be at least 8 characters',
+  alreadyHaveAccount: 'Already have an account?',
+  noAccount: "Don't have an account?",
 } as const;
 
 type StringKey = keyof typeof strings;
