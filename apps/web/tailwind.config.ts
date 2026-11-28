@@ -4,12 +4,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: '#0D9488', dark: '#0F766E', soft: '#E6F7F5' },
-        ink: '#0F172A',
-        danger: '#E11D48',
-        gold: '#F59E0B',
+        brand: { DEFAULT: '#F4631E', dark: '#D94E0E', soft: '#FFEDE3' },
+        forest: '#0E3B35',
+        ink: '#17130F',
+        cream: '#FAF6EF',
+        sand: '#EFE8DB',
+        danger: '#D7263D',
       },
-      fontFamily: { sans: ['Inter', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'] },
+      fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'] },
+      keyframes: { orbit: { to: { transform: 'rotate(360deg)' } } },
+      animation: { orbit: 'orbit 60s linear infinite' },
     },
   },
   plugins: [],
