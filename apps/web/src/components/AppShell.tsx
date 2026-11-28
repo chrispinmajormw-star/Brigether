@@ -28,6 +28,7 @@ export function AppShell({ children, name }: { children: React.ReactNode; name?:
         <nav aria-label="Main" className="bg-white/90 backdrop-blur border border-ink/10 shadow-lg shadow-ink/5 rounded-full pl-3 pr-2 py-2 flex items-center gap-1">
           <Link href="/dashboard" aria-label="Brigether home" className="mr-2"><Logo size="w-8 h-8" /></Link>
           {link('/dashboard', 'Home')}
+          {link('/create', 'Create')}
           {link('/join', 'Join')}
           {name && (
             <>

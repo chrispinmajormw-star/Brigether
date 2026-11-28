@@ -51,6 +51,9 @@ export default function DashboardPage() {
       <p className="text-ink/60 mt-3 mb-8">Who are you meeting today?</p>
 
       <Door busy={busy} onStart={startMeeting} />
+      <button onClick={() => router.push('/create')} className="mt-5 text-sm font-semibold text-ink/60 underline hover:text-ink">
+        Or create a meeting to share first
+      </button>
 
       <section className="mt-16 text-left max-w-md mx-auto">
         <h2 className="text-center text-sm font-bold uppercase tracking-widest text-ink/40 mb-4">Recent meetings</h2>
