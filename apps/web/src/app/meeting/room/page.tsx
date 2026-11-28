@@ -159,7 +159,7 @@ function RoomInner() {
   if (!info) return <main id="main" className="min-h-screen bg-ink grid place-items-center text-white/60">Joining…</main>;
 
   const initial = info.displayName.charAt(0).toUpperCase();
-  const ctrl = 'w-12 h-12 rounded-full grid place-items-center transition relative';
+  const ctrl = 'w-11 h-11 sm:w-12 sm:h-12 rounded-full grid place-items-center transition relative';
   const count = peers.length + 1;
   const alone = peers.length === 0;
 
@@ -224,20 +224,20 @@ function RoomInner() {
     : screen ? 'Stop presenting' : 'Present your screen';
 
   return (
-    <div className="relative min-h-screen bg-ink text-white flex flex-col">
+    <div className="relative min-h-[100dvh] bg-ink text-white flex flex-col">
       <Backdrop dark />
 
       <header className="relative z-10 flex justify-center pt-4 px-4">
-        <div className="bg-white/10 backdrop-blur rounded-full pl-3 pr-1.5 py-1.5 flex items-center gap-2 sm:gap-3 text-sm">
-          <Logo size="w-7 h-7" light />
-          <span className="font-mono tracking-[0.25em] font-semibold">{code}</span>
+        <div className="max-w-full bg-white/10 backdrop-blur rounded-full pl-3 pr-1.5 py-1.5 flex items-center gap-1.5 sm:gap-3 text-xs sm:text-sm">
+          <span className="hidden sm:inline-flex"><Logo size="w-7 h-7" light /></span>
+          <span className="font-mono tracking-[0.12em] sm:tracking-[0.25em] font-semibold">{code}</span>
           <span className="bg-white/10 px-2.5 py-1 rounded-full font-medium" aria-label={`${count} in the meeting`}>👥 {count}</span>
           {presenting && <span className="text-xs bg-brand text-ink font-bold px-2.5 py-1 rounded-full">Presenting</span>}
           {info.lowBandwidth && <span className="hidden sm:inline text-xs bg-brand/25 text-brand px-2.5 py-1 rounded-full">Low-data</span>}
           <button onClick={() => setSoundOn(!soundOn)} aria-pressed={soundOn} aria-label={soundOn ? 'Mute notification sounds' : 'Turn on notification sounds'}
-            className="bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full grid place-items-center">{soundOn ? '🔔' : '🔕'}</button>
+            className="bg-white/10 hover:bg-white/20 w-9 h-9 rounded-full grid place-items-center">{soundOn ? '🔔' : '🔕'}</button>
           <button onClick={copyInvite} className="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full inline-flex items-center gap-2 font-medium">
-            <Icon name={copied ? 'check' : 'copy'} className="w-4 h-4" /> {copied ? 'Copied' : 'Invite'}
+            <Icon name={copied ? 'check' : 'copy'} className="w-4 h-4" /> <span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline">{copied ? 'Copied' : 'Invite'}</span></span></span></span></span></span></span></span></span></span></span>
           </button>
         </div>
       </header>
@@ -313,13 +313,13 @@ function RoomInner() {
 
       {chatOpen && !presenting && (
         <aside aria-label="Chat"
-          className="fixed inset-0 sm:inset-auto sm:right-5 sm:top-20 sm:bottom-28 sm:w-80 bg-white text-ink sm:rounded-3xl shadow-2xl flex flex-col z-30">
+          className="fixed inset-x-0 top-0 h-[100dvh] sm:h-auto sm:inset-auto sm:right-5 sm:top-20 sm:bottom-28 sm:w-80 bg-white text-ink sm:rounded-3xl shadow-2xl flex flex-col z-30">
           {chatContent}
         </aside>
       )}
 
-      <footer className="fixed bottom-5 inset-x-0 flex justify-center z-20 px-4">
-        <div className="bg-white text-ink rounded-full p-2 flex items-center gap-2 shadow-2xl">
+      <footer className="fixed bottom-3 sm:bottom-5 inset-x-0 flex justify-center z-20 px-3 pb-[env(safe-area-inset-bottom)]">
+        <div className="bg-white text-ink rounded-full p-1.5 sm:p-2 flex items-center gap-1.5 sm:gap-2 shadow-2xl">
           <button onClick={toggleMic} aria-label={micOn ? 'Mute microphone' : 'Unmute microphone'} aria-pressed={!micOn}
             className={`${ctrl} ${micOn ? 'bg-sand hover:bg-ink/10' : 'bg-danger text-white'}`}>
             <Icon name={micOn ? 'mic' : 'micOff'} />
@@ -330,7 +330,7 @@ function RoomInner() {
           </button>
           <button onClick={() => (screen ? stopShare() : startShare())} disabled={shareDisabled}
             aria-label={shareTitle} title={shareTitle} aria-pressed={!!screen}
-            className={`${ctrl} disabled:opacity-35 disabled:cursor-not-allowed ${screen ? 'bg-brand' : 'bg-sand hover:bg-ink/10'}`}>
+            className={`${ctrl} max-sm:hidden disabled:opacity-35 disabled:cursor-not-allowed ${screen ? 'bg-brand' : 'bg-sand hover:bg-ink/10'}`}>
             <Icon name="screen" />
           </button>
           <button onClick={() => setChatOpen(!chatOpen)} aria-label="Toggle chat" aria-pressed={chatOpen}
@@ -340,7 +340,7 @@ function RoomInner() {
               <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-danger text-white text-xs font-bold grid place-items-center">{unread}</span>
             )}
           </button>
-          <button onClick={leave} className="h-12 px-6 rounded-full bg-danger text-white font-semibold hover:brightness-110">Leave</button>
+          <button onClick={leave} className="h-11 sm:h-12 px-4 sm:px-6 rounded-full bg-danger text-white font-semibold hover:brightness-110">Leave</button>
         </div>
       </footer>
     </div>

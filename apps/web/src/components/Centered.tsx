@@ -26,7 +26,7 @@ export function Backdrop({ dark = false }: { dark?: boolean }) {
 
 export function Centered({ children, width = 'max-w-md' }: { children: React.ReactNode; width?: string }) {
   return (
-    <div className="relative min-h-screen grid place-items-center px-4 py-10">
+    <div className="relative min-h-[100dvh] grid place-items-center px-4 py-8">
       <Backdrop />
       <main id="main" className={`relative z-10 w-full ${width}`}>
         <Link href="/" className="flex justify-center mb-8" aria-label="Back to home"><Logo text size="w-10 h-10" /></Link>

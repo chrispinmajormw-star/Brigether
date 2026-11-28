@@ -16,9 +16,9 @@ export default function LandingPage() {
       <header className="relative z-20 flex justify-center pt-5 px-4">
         <nav className="bg-white/90 backdrop-blur border border-ink/10 shadow-lg shadow-ink/5 rounded-full pl-3 pr-2 py-2 flex items-center gap-1">
           <Logo text size="w-8 h-8" />
-          <span className="w-px h-6 bg-ink/10 mx-3" />
-          <Link href="/login" className="px-4 py-2 rounded-full text-sm font-semibold text-ink/70 hover:bg-sand">Sign in</Link>
-          <Link href="/signup" className="px-4 py-2 rounded-full text-sm font-semibold bg-ink text-white hover:bg-ink/85">Sign up</Link>
+          <span className="w-px h-6 bg-ink/10 mx-1.5 sm:mx-3" />
+          <Link href="/login" className="px-3 sm:px-4 py-2.5 rounded-full text-sm font-semibold text-ink/70 hover:bg-sand">Sign in</Link>
+          <Link href="/signup" className="px-3 sm:px-4 py-2.5 rounded-full text-sm font-semibold bg-ink text-white hover:bg-ink/85">Sign up</Link>
         </nav>
       </header>
 
