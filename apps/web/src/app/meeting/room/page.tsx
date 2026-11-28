@@ -3,7 +3,8 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Icon, Logo } from '@/components/Icons';
 import { Backdrop } from '@/components/Centered';
-import { useRoom } from '@/lib/useRoom';
+import { useCall } from '@/lib/useCall';
+import type { Participant } from '@/lib/useCall';
 import { sounds } from '@/lib/sounds';
 
 const SURFACE: Record<string, string> = {
@@ -12,6 +13,22 @@ const SURFACE: Record<string, string> = {
   browser: 'a browser tab',
 };
 
+function MediaView({
+  stream, show = true, muted = false, contain = false, mirror = false,
+}: { stream: MediaStream | null; show?: boolean; muted?: boolean; contain?: boolean; mirror?: boolean }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.srcObject = stream;
+    if (stream) v.play().catch(() => {});
+  }, [stream]);
+  return (
+    <video ref={ref} autoPlay playsInline muted={muted}
+      className={`w-full h-full ${contain ? 'object-contain' : 'object-cover'} ${mirror ? '-scale-x-100' : ''} ${show ? '' : 'hidden'}`} />
+  );
+}
+
 function RoomInner() {
   const search = useSearchParams();
   const code = (search.get('code') ?? '').toUpperCase();
@@ -19,6 +36,7 @@ function RoomInner() {
 
   const [info, setInfo] = useState<any>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [ready, setReady] = useState(false);
   const [screen, setScreen] = useState<MediaStream | null>(null);
   const [surface, setSurface] = useState('');
   const [canShare, setCanShare] = useState(false);
@@ -31,8 +49,6 @@ function RoomInner() {
   const [copied, setCopied] = useState(false);
   const [draft, setDraft] = useState('');
 
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const screenRef = useRef<HTMLVideoElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const screenStreamRef = useRef<MediaStream | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -48,19 +64,22 @@ function RoomInner() {
     toastTimer.current = setTimeout(() => setToast(null), 3500);
   }
 
-  const { peers, messages, sendChat, setPresenting } = useRoom(code, info?.displayName ?? null, {
-    onJoin: (p) => { showToast(`${p.name} joined`); if (soundRef.current) sounds.join(); },
-    onLeave: (p) => { showToast(`${p.name} left`); if (soundRef.current) sounds.leave(); },
-    onChat: () => {
-      if (!chatRef.current) setUnread((n) => n + 1);
-      if (soundRef.current) sounds.message();
+  const { peers, messages, status, sendChat, shareScreen, setMedia } = useCall(
+    code, info?.displayName ?? null, ready, stream,
+    {
+      onJoin: (n) => { showToast(`${n} joined`); if (soundRef.current) sounds.join(); },
+      onLeave: (n) => { showToast(`${n} left`); if (soundRef.current) sounds.leave(); },
+      onChat: () => {
+        if (!chatRef.current) setUnread((n) => n + 1);
+        if (soundRef.current) sounds.message();
+      },
+      onPresent: (n, on) => {
+        showToast(on ? `${n} started presenting` : `${n} stopped presenting`);
+        if (on) setChatOpen(true);
+        if (soundRef.current) sounds.message();
+      },
     },
-    onPresent: (name, on) => {
-      showToast(on ? `${name} started presenting` : `${name} stopped presenting`);
-      if (on) setChatOpen(true);
-      if (soundRef.current) sounds.message();
-    },
-  });
+  );
 
   useEffect(() => {
     setCanShare(typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getDisplayMedia);
@@ -76,37 +95,32 @@ function RoomInner() {
     navigator.mediaDevices
       .getUserMedia({ audio: true, video: wantVideo })
       .then(setStream)
-      .catch(() => { setCamOn(false); setMicOn(false); });
+      .catch(() => { setCamOn(false); setMicOn(false); })
+      .finally(() => setReady(true));
   }, [code, router]);
 
-  const otherPresenter = peers.find((p) => p.presenting);
-  const presenting = !!screen || !!otherPresenter;
+  useEffect(() => { if (ready) setMedia(micOn, camOn); }, [ready]); // eslint-disable-line
 
-  useEffect(() => {
-    if (videoRef.current && stream) videoRef.current.srcObject = stream;
-  }, [stream, info, camOn, peers.length, presenting]);
+  const presenterPeer = peers.find((p) => p.presenting);
+  const presenting = !!screen || !!presenterPeer;
 
-  useEffect(() => {
-    if (screenRef.current && screen) screenRef.current.srcObject = screen;
-  }, [screen, presenting]);
-
-  useEffect(() => () => {
-    stream?.getTracks().forEach((tk) => tk.stop());
-  }, [stream]);
-  useEffect(() => () => {
-    screenStreamRef.current?.getTracks().forEach((tk) => tk.stop());
-  }, []);
+  useEffect(() => () => { stream?.getTracks().forEach((tk) => tk.stop()); }, [stream]);
+  useEffect(() => () => { screenStreamRef.current?.getTracks().forEach((tk) => tk.stop()); }, []);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, chatOpen]);
   useEffect(() => { if (chatOpen) setUnread(0); }, [chatOpen]);
   useEffect(() => { if (info && soundRef.current) sounds.join(); }, [info]);
 
   function toggleMic() {
-    stream?.getAudioTracks().forEach((tk) => (tk.enabled = !micOn));
-    setMicOn(!micOn);
+    const next = !micOn;
+    stream?.getAudioTracks().forEach((tk) => (tk.enabled = next));
+    setMicOn(next);
+    setMedia(next, camOn);
   }
   function toggleCam() {
-    stream?.getVideoTracks().forEach((tk) => (tk.enabled = !camOn));
-    setCamOn(!camOn);
+    const next = !camOn;
+    stream?.getVideoTracks().forEach((tk) => (tk.enabled = next));
+    setCamOn(next);
+    setMedia(micOn, next);
   }
 
   async function startShare() {
@@ -120,11 +134,11 @@ function RoomInner() {
       track.onended = () => stopShare();
       screenStreamRef.current = s;
       setScreen(s);
-      setPresenting(true);
+      shareScreen(s);
       setChatOpen(true);
       if (soundRef.current) sounds.join();
     } catch {
-      /* the person closed the picker: nothing to do */
+      /* the person closed the picker */
     }
   }
   function stopShare() {
@@ -132,12 +146,11 @@ function RoomInner() {
     screenStreamRef.current = null;
     setScreen(null);
     setSurface('');
-    setPresenting(false);
+    shareScreen(null);
   }
   function goFullscreen() {
     stageRef.current?.requestFullscreen?.();
   }
-
   function leave() {
     stopShare();
     stream?.getTracks().forEach((tk) => tk.stop());
@@ -156,36 +169,44 @@ function RoomInner() {
     setDraft('');
   }
 
-  if (!info) return <main id="main" className="min-h-screen bg-ink grid place-items-center text-white/60">Joining…</main>;
+  if (!info) return <main id="main" className="min-h-[100dvh] bg-ink grid place-items-center text-white/60">Joining…</main>;
 
   const initial = info.displayName.charAt(0).toUpperCase();
   const ctrl = 'w-11 h-11 sm:w-12 sm:h-12 rounded-full grid place-items-center transition relative';
   const count = peers.length + 1;
   const alone = peers.length === 0;
+  const selfShowsVideo = camOn && !!stream && stream.getVideoTracks().length > 0;
 
   const selfTile = (compact: boolean) => (
     <div className={`relative overflow-hidden bg-white/5 ring-1 ring-white/10 grid place-items-center aspect-video ${compact ? 'rounded-2xl' : 'rounded-[2rem]'} ${!compact && alone ? 'max-h-[62vh] w-full max-w-4xl' : ''}`}>
-      <video ref={videoRef} autoPlay muted playsInline className={`w-full h-full object-cover -scale-x-100 ${camOn ? '' : 'hidden'}`} />
-      {!camOn && (
-        <div className={`rounded-full bg-brand text-ink font-extrabold grid place-items-center ${compact ? 'w-12 h-12 text-xl' : 'w-24 h-24 text-4xl'}`}>{initial}</div>
+      <MediaView stream={stream} show={selfShowsVideo} muted mirror />
+      {!selfShowsVideo && (
+        <div className={`absolute rounded-full bg-brand text-ink font-extrabold grid place-items-center ${compact ? 'w-12 h-12 text-xl' : 'w-24 h-24 text-4xl'}`}>{initial}</div>
       )}
-      <span className={`absolute left-2 bottom-2 bg-black/60 rounded-full inline-flex items-center gap-1.5 ${compact ? 'text-xs px-2.5 py-1' : 'text-sm px-3.5 py-1.5 left-4 bottom-4'}`}>
+      <span className={`absolute bg-black/60 rounded-full inline-flex items-center gap-1.5 ${compact ? 'left-2 bottom-2 text-xs px-2.5 py-1' : 'left-4 bottom-4 text-sm px-3.5 py-1.5'}`}>
         {!micOn && <Icon name="micOff" className="w-3 h-3 text-red-400" />}
         {info.displayName} (You)
       </span>
     </div>
   );
 
-  const peerTile = (p: { id: string; name: string; presenting?: boolean }, i: number, compact: boolean) => (
-    <div key={p.id} className={`relative aspect-video bg-white/5 ring-1 ring-white/10 grid place-items-center ${compact ? 'rounded-2xl' : 'rounded-[2rem]'}`}>
-      <div className={`rounded-full font-extrabold grid place-items-center text-ink ${i % 2 ? 'bg-white' : 'bg-emerald-400'} ${compact ? 'w-12 h-12 text-xl' : 'w-24 h-24 text-4xl'}`}>
-        {p.name.charAt(0).toUpperCase()}
+  const peerTile = (p: Participant, i: number, compact: boolean) => {
+    const showVid = p.camOn && !!p.cam && p.cam.getVideoTracks().length > 0;
+    return (
+      <div key={p.id} className={`relative aspect-video bg-white/5 ring-1 ring-white/10 grid place-items-center overflow-hidden ${compact ? 'rounded-2xl' : 'rounded-[2rem]'}`}>
+        <MediaView stream={p.cam} show={showVid} />
+        {!showVid && (
+          <div className={`absolute rounded-full font-extrabold grid place-items-center text-ink ${i % 2 ? 'bg-white' : 'bg-emerald-400'} ${compact ? 'w-12 h-12 text-xl' : 'w-24 h-24 text-4xl'}`}>
+            {p.name.charAt(0).toUpperCase()}
+          </div>
+        )}
+        <span className={`absolute bg-black/60 rounded-full inline-flex items-center gap-1.5 ${compact ? 'left-2 bottom-2 text-xs px-2.5 py-1' : 'left-4 bottom-4 text-sm px-3.5 py-1.5'}`}>
+          {!p.micOn && <Icon name="micOff" className="w-3 h-3 text-red-400" />}
+          {p.presenting ? '🖥 ' : ''}{p.name}
+        </span>
       </div>
-      <span className={`absolute bg-black/60 rounded-full ${compact ? 'left-2 bottom-2 text-xs px-2.5 py-1' : 'left-4 bottom-4 text-sm px-3.5 py-1.5'}`}>
-        {p.presenting ? '🖥 ' : ''}{p.name}
-      </span>
-    </div>
-  );
+    );
+  };
 
   const chatContent = (
     <>
@@ -216,18 +237,18 @@ function RoomInner() {
     </>
   );
 
-  const shareDisabled = !canShare || (!!otherPresenter && !screen);
+  const shareDisabled = !canShare || (!!presenterPeer && !screen);
   const shareTitle = !canShare
     ? 'Screen sharing is not supported on this device'
-    : otherPresenter && !screen
-    ? `${otherPresenter.name} is presenting`
+    : presenterPeer && !screen
+    ? `${presenterPeer.name} is presenting`
     : screen ? 'Stop presenting' : 'Present your screen';
 
   return (
     <div className="relative min-h-[100dvh] bg-ink text-white flex flex-col">
       <Backdrop dark />
 
-      <header className="relative z-10 flex justify-center pt-4 px-4">
+      <header className="relative z-10 flex justify-center pt-4 px-3">
         <div className="max-w-full bg-white/10 backdrop-blur rounded-full pl-3 pr-1.5 py-1.5 flex items-center gap-1.5 sm:gap-3 text-xs sm:text-sm">
           <span className="hidden sm:inline-flex"><Logo size="w-7 h-7" light /></span>
           <span className="font-mono tracking-[0.12em] sm:tracking-[0.25em] font-semibold">{code}</span>
@@ -236,11 +257,18 @@ function RoomInner() {
           {info.lowBandwidth && <span className="hidden sm:inline text-xs bg-brand/25 text-brand px-2.5 py-1 rounded-full">Low-data</span>}
           <button onClick={() => setSoundOn(!soundOn)} aria-pressed={soundOn} aria-label={soundOn ? 'Mute notification sounds' : 'Turn on notification sounds'}
             className="bg-white/10 hover:bg-white/20 w-9 h-9 rounded-full grid place-items-center">{soundOn ? '🔔' : '🔕'}</button>
-          <button onClick={copyInvite} className="bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-full inline-flex items-center gap-2 font-medium">
-            <Icon name={copied ? 'check' : 'copy'} className="w-4 h-4" /> <span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline"><span className="hidden sm:inline">{copied ? 'Copied' : 'Invite'}</span></span></span></span></span></span></span></span></span></span></span>
+          <button onClick={copyInvite} className="bg-white/10 hover:bg-white/20 px-3 py-2 rounded-full inline-flex items-center gap-2 font-medium">
+            <Icon name={copied ? 'check' : 'copy'} className="w-4 h-4" /> <span className="hidden sm:inline">{copied ? 'Copied' : 'Invite'}</span>
           </button>
         </div>
       </header>
+
+      {status === 'connecting' && <p className="relative z-10 text-center text-xs text-white/60 mt-2" role="status">Connecting to the meeting…</p>}
+      {status === 'error' && (
+        <p className="relative z-10 text-center text-xs text-red-300 mt-2 px-4" role="alert">
+          Could not reach the meeting service. Check your internet connection and reload the page.
+        </p>
+      )}
 
       {toast && (
         <div role="status" className="fixed top-20 inset-x-0 flex justify-center z-40 px-4 pointer-events-none">
@@ -251,41 +279,47 @@ function RoomInner() {
       <main id="main" className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 pt-4 pb-28 gap-5">
         {presenting ? (
           <div className="w-full max-w-7xl grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
-            {/* Stage */}
             <div ref={stageRef}
               className="relative bg-black rounded-[2rem] overflow-hidden ring-1 ring-white/10 aspect-video lg:aspect-auto lg:h-[calc(100vh-12rem)] grid place-items-center">
               {screen ? (
                 <>
-                  <video ref={screenRef} autoPlay muted playsInline className="w-full h-full object-contain" />
+                  <MediaView stream={screen} muted contain />
                   <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
-                    <span className="bg-brand text-ink text-sm font-bold px-3.5 py-1.5 rounded-full">
+                    <span className="bg-brand text-ink text-xs sm:text-sm font-bold px-3.5 py-1.5 rounded-full">
                       You are presenting {SURFACE[surface] ?? 'your screen'}
                     </span>
                     <div className="flex gap-2">
                       <button onClick={goFullscreen} className="bg-white/15 hover:bg-white/25 text-sm px-3.5 py-1.5 rounded-full font-medium">Full screen</button>
-                      <button onClick={stopShare} className="bg-danger hover:brightness-110 text-sm px-3.5 py-1.5 rounded-full font-semibold">Stop presenting</button>
+                      <button onClick={stopShare} className="bg-danger hover:brightness-110 text-sm px-3.5 py-1.5 rounded-full font-semibold">Stop</button>
                     </div>
                   </div>
                   {surface === 'monitor' && (
-                    <p className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 text-xs px-3 py-1.5 rounded-full text-white/80">
-                      Tip: if you see a tunnel of screens, share a window or tab instead.
+                    <p className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/70 text-xs px-3 py-1.5 rounded-full text-white/80 whitespace-nowrap">
+                      Tip: sharing this page's screen shows screens inside screens. Share another window or tab.
                     </p>
                   )}
+                </>
+              ) : presenterPeer?.screen ? (
+                <>
+                  <MediaView stream={presenterPeer.screen} muted contain />
+                  <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+                    <span className="bg-brand text-ink text-xs sm:text-sm font-bold px-3.5 py-1.5 rounded-full">
+                      {presenterPeer.name} is presenting
+                    </span>
+                    <button onClick={goFullscreen} className="bg-white/15 hover:bg-white/25 text-sm px-3.5 py-1.5 rounded-full font-medium">Full screen</button>
+                  </div>
                 </>
               ) : (
                 <div className="text-center px-6">
                   <p className="text-4xl mb-3">🖥</p>
-                  <p className="text-xl font-bold">{otherPresenter?.name} is presenting</p>
-                  <p className="text-sm text-white/55 mt-2 max-w-sm mx-auto">
-                    Their screen will appear here once live calling between devices is connected.
-                  </p>
+                  <p className="text-xl font-bold">{presenterPeer?.name} is presenting</p>
+                  <p className="text-sm text-white/55 mt-2">Loading their screen…</p>
                 </div>
               )}
             </div>
 
-            {/* People and chat */}
             <div className="flex flex-col gap-3 min-h-0 lg:h-[calc(100vh-12rem)]">
-              <div className="grid grid-cols-2 lg:grid-cols-2 gap-2 overflow-y-auto shrink-0 max-h-56">
+              <div className="grid grid-cols-2 gap-2 overflow-y-auto shrink-0 max-h-56">
                 {selfTile(true)}
                 {peers.map((p, i) => peerTile(p, i, true))}
               </div>

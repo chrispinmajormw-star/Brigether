@@ -24,6 +24,8 @@ jobs:
         env:
           BASE_PATH: /Brigether
           NEXT_PUBLIC_DEMO: "true"
+          NEXT_PUBLIC_METERED_APP: ${{ vars.METERED_APP }}
+          NEXT_PUBLIC_METERED_KEY: ${{ vars.METERED_KEY }}
       - run: touch apps/web/out/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
