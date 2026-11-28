@@ -4,18 +4,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: '#0F6B4F', dark: '#0A4A38', soft: '#DDEEE5' },
-        sun: '#F2A900',
-        bubble: '#B8481C',
-        danger: '#D62839',
-        surface: '#F3E7CF',
-        panel: '#F8F0DF',
-        ink: '#2A1A10',
-        cream: '#FBF5E8',
-        teal: { DEFAULT: '#0F6B4F', 50: '#DDEEE5', 700: '#0A4A38', 900: '#073528' },
-        gold: { DEFAULT: '#B8481C', 50: '#F6E3D8', 600: '#B8481C' },
+        brand: { DEFAULT: '#0D9488', dark: '#0F766E', soft: '#E6F7F5' },
+        ink: '#0F172A',
+        danger: '#E11D48',
+        gold: '#F59E0B',
       },
-      fontFamily: { sans: ['Poppins', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'] },
+      fontFamily: { sans: ['Inter', 'system-ui', 'Segoe UI', 'Roboto', 'sans-serif'] },
     },
   },
   plugins: [],

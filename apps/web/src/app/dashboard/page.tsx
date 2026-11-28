@@ -19,12 +19,13 @@ export default function DashboardPage() {
     if (user) api.myMeetings().then(setMeetings).catch(() => {});
   }, [user]);
 
-  async function startMeeting() {
+  async function startMeeting(e: React.FormEvent) {
+    e.preventDefault();
     setBusy(true);
     try {
       const m = await api.createMeeting({ title: title.trim() || 'Instant meeting' });
       router.push(`/meeting/lobby?code=${m.code}`);
-    } catch (e: any) { alert(e.message); }
+    } catch (err: any) { alert(err.message); }
     finally { setBusy(false); }
   }
 
@@ -37,63 +38,67 @@ export default function DashboardPage() {
   async function copyLink(c: string) {
     const base = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
     const link = `${window.location.origin}${base}/meeting/lobby/?code=${c}`;
-    try { await navigator.clipboard.writeText(link); setCopied(c); setTimeout(() => setCopied(null), 1500); } catch {}
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(c);
+      setTimeout(() => setCopied(null), 1500);
+    } catch {}
   }
 
-  if (loading) return <AppShell><p>Loading…</p></AppShell>;
+  if (loading) return <AppShell><p className="text-slate-500">Loading…</p></AppShell>;
 
   return (
     <AppShell name={user?.displayName}>
-      <header className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold">Hi {user?.displayName} 👋</h1>
-        <p className="text-gray-500">Start a meeting or join one with a code.</p>
-      </header>
+      <h1 className="text-2xl sm:text-3xl font-bold">Welcome, {user?.displayName}</h1>
+      <p className="text-slate-500 mt-1">Start a new meeting or join one with a code.</p>
 
-      <div className="grid lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-2 space-y-4">
-          <section className="bg-surface rounded-3xl p-5 space-y-3">
-            <h2 className="font-semibold">Start a meeting</h2>
-            <input className="input bg-white" placeholder="Meeting title (optional)" value={title} onChange={(e) => setTitle(e.target.value)} />
-            <button className="btn-primary w-full" onClick={startMeeting} disabled={busy}>
-              <Icon name="video" /> {busy ? 'Starting…' : 'Start now'}
-            </button>
-          </section>
+      <div className="grid md:grid-cols-2 gap-5 mt-8">
+        <form onSubmit={startMeeting} className="card space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-brand text-white grid place-items-center"><Icon name="video" /></span>
+            <h2 className="font-semibold text-lg">New meeting</h2>
+          </div>
+          <input className="input" placeholder="Meeting name (optional)" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
+          <button className="btn-primary w-full" disabled={busy}>{busy ? 'Starting…' : 'Start meeting'}</button>
+        </form>
 
-          <form onSubmit={joinByCode} className="bg-surface rounded-3xl p-5 space-y-3">
-            <h2 className="font-semibold">Join with a code</h2>
-            <input className="input bg-white uppercase tracking-widest" placeholder="DEMO1234" maxLength={12}
-              value={code} onChange={(e) => setCode(e.target.value)} />
-            <button className="btn-gold w-full">Join</button>
-          </form>
-        </div>
-
-        <section className="lg:col-span-3 bg-surface rounded-3xl p-5">
-          <h2 className="font-semibold mb-3">Your meetings</h2>
-          {meetings.length === 0 ? (
-            <p className="text-gray-500">No meetings yet. Start one!</p>
-          ) : (
-            <ul className="space-y-2">
-              {meetings.map((m) => (
-                <li key={m.id} className="bg-white rounded-2xl p-3 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-brand-soft text-brand grid place-items-center shrink-0"><Icon name="video" /></div>
-                    <div className="min-w-0">
-                      <p className="font-medium truncate">{m.title}</p>
-                      <p className="text-xs text-gray-500">Code {m.code}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button className="btn-soft !px-3" onClick={() => copyLink(m.code)} aria-label="Copy link">
-                      <Icon name="copy" className="w-4 h-4" /> {copied === m.code ? 'Copied' : ''}
-                    </button>
-                    <button className="btn-primary" onClick={() => router.push(`/meeting/lobby?code=${m.code}`)}>Join</button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <form onSubmit={joinByCode} className="card space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="w-10 h-10 rounded-xl bg-slate-100 text-ink grid place-items-center"><Icon name="link" /></span>
+            <h2 className="font-semibold text-lg">Join with a code</h2>
+          </div>
+          <input className="input uppercase tracking-widest" placeholder="Enter meeting code" maxLength={12} value={code} onChange={(e) => setCode(e.target.value)} />
+          <button className="btn-secondary w-full" disabled={code.trim().length < 4}>Join meeting</button>
+        </form>
       </div>
+
+      <section className="mt-10">
+        <h2 className="font-semibold text-lg mb-3">Your meetings</h2>
+        {meetings.length === 0 ? (
+          <div className="card text-center py-10">
+            <p className="font-medium">No meetings yet</p>
+            <p className="text-sm text-slate-500 mt-1">Your meetings will show up here after you start one.</p>
+          </div>
+        ) : (
+          <ul className="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+            {meetings.map((m) => (
+              <li key={m.id} className="p-4 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{m.title}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Code <span className="font-mono tracking-wider">{m.code}</span></p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button className="btn-secondary !py-2 !px-3 text-sm" onClick={() => copyLink(m.code)}>
+                    <Icon name={copied === m.code ? 'check' : 'copy'} className="w-4 h-4" />
+                    <span className="hidden sm:inline">{copied === m.code ? 'Copied' : 'Copy link'}</span>
+                  </button>
+                  <button className="btn-primary !py-2 text-sm" onClick={() => router.push(`/meeting/lobby?code=${m.code}`)}>Join</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </AppShell>
   );
 }

@@ -1,40 +1,21 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html, body { background: #FBF5E8; color: #2A1A10; font-family: 'Poppins', system-ui, sans-serif; }
-*:focus-visible { outline: 3px solid #F2A900; outline-offset: 2px; }
-
-/* Kente-style woven strip */
-.kente {
-  background-image: linear-gradient(90deg,
-    #F2A900 0 14%, #2A1A10 14% 18%, #B8481C 18% 40%, #2A1A10 40% 44%,
-    #0F6B4F 44% 66%, #2A1A10 66% 70%, #D62839 70% 86%, #F2A900 86% 100%);
-  background-size: 160px 100%;
-}
-
-/* Subtle diamond weave for dark panels */
-.diamonds {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M20 4l16 16-16 16L4 20z' fill='none' stroke='%23ffffff' stroke-opacity='.10' stroke-width='2'/%3E%3C/svg%3E");
-}
+html, body { background: #F8FAFC; color: #0F172A; font-family: 'Inter', system-ui, sans-serif; }
+*:focus-visible { outline: 3px solid #5EEAD4; outline-offset: 2px; }
 
 .btn-primary {
-  @apply bg-brand text-white px-5 py-2.5 rounded-full font-medium hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed transition inline-flex items-center justify-center gap-2;
+  @apply bg-brand text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed transition inline-flex items-center justify-center gap-2;
 }
-.btn-gold {
-  @apply bg-bubble text-white px-5 py-2.5 rounded-full font-medium hover:brightness-110 disabled:opacity-50 transition inline-flex items-center justify-center gap-2;
-}
-.btn-sun {
-  @apply bg-sun text-ink px-5 py-2.5 rounded-full font-semibold hover:brightness-105 transition inline-flex items-center justify-center gap-2;
-}
-.btn-soft {
-  @apply bg-panel text-ink px-5 py-2.5 rounded-full font-medium hover:bg-surface transition inline-flex items-center justify-center gap-2;
+.btn-secondary {
+  @apply bg-white text-ink border border-slate-300 px-5 py-2.5 rounded-xl font-semibold hover:bg-slate-50 transition inline-flex items-center justify-center gap-2;
 }
 .btn-danger {
-  @apply bg-danger text-white px-5 py-2.5 rounded-full font-medium hover:brightness-110 transition inline-flex items-center justify-center gap-2;
+  @apply bg-danger text-white px-5 py-2.5 rounded-xl font-semibold hover:brightness-110 transition inline-flex items-center justify-center gap-2;
 }
 .input {
-  @apply w-full border border-transparent rounded-2xl px-4 py-2.5 bg-panel focus:bg-white focus:border-brand outline-none transition;
+  @apply w-full border border-slate-300 rounded-xl px-4 py-2.5 bg-white placeholder:text-slate-400 focus:border-brand focus:ring-2 focus:ring-brand/20 outline-none transition;
 }
-.card { @apply bg-white rounded-3xl shadow-sm p-6; }
+.card { @apply bg-white rounded-2xl border border-slate-200 shadow-sm p-6; }
