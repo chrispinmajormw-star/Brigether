@@ -31,7 +31,7 @@ export function useRoom(code: string, name: string | null, handlers: Handlers) {
     const add = (p: Peer, silent: boolean) => {
       if (known.has(p.id)) return;
       known.set(p.id, p);
-      setPeers([...known.values()]);
+      setPeers(Array.from(known.values()));
       if (!silent) h.current.onJoin?.(p);
     };
 
@@ -47,14 +47,14 @@ export function useRoom(code: string, name: string | null, handlers: Handlers) {
         const p = known.get(m.id);
         if (p) {
           known.set(m.id, { ...p, presenting: !!m.on });
-          setPeers([...known.values()]);
+          setPeers(Array.from(known.values()));
           h.current.onPresent?.(p.name, !!m.on);
         }
       } else if (m.type === 'bye') {
         const p = known.get(m.id);
         if (p) {
           known.delete(m.id);
-          setPeers([...known.values()]);
+          setPeers(Array.from(known.values()));
           h.current.onLeave?.(p);
         }
       } else if (m.type === 'chat') {
