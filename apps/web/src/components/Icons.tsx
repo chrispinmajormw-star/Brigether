@@ -13,6 +13,7 @@ const paths: Record<string, React.ReactNode> = {
   chat: <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></>,
   x: <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>,
   check: <><polyline points="20 6 9 17 4 12" /></>,
+  screen: <><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></>,
 };
 
 export function Icon({ name, className = 'w-5 h-5' }: { name: string; className?: string }) {

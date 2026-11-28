@@ -1,20 +1,22 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-export type Peer = { id: string; name: string };
+export type Peer = { id: string; name: string; presenting?: boolean };
 export type ChatMsg = { id: string; from: string; text: string; me: boolean };
 type Handlers = {
   onJoin?: (p: Peer) => void;
   onLeave?: (p: Peer) => void;
   onChat?: (m: ChatMsg) => void;
+  onPresent?: (name: string, on: boolean) => void;
 };
 
-/* Presence and chat between tabs of the same browser (BroadcastChannel). */
+/* Presence, chat and presenting state between tabs of the same browser. */
 export function useRoom(code: string, name: string | null, handlers: Handlers) {
   const [peers, setPeers] = useState<Peer[]>([]);
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const chRef = useRef<BroadcastChannel | null>(null);
   const idRef = useRef('');
+  const presRef = useRef(false);
   const h = useRef(handlers);
   h.current = handlers;
 
@@ -37,10 +39,17 @@ export function useRoom(code: string, name: string | null, handlers: Handlers) {
       const m = e.data;
       if (!m || m.id === id) return;
       if (m.type === 'hello') {
-        add({ id: m.id, name: m.name }, false);
-        ch.postMessage({ type: 'here', id, name, to: m.id });
+        add({ id: m.id, name: m.name, presenting: !!m.presenting }, false);
+        ch.postMessage({ type: 'here', id, name, to: m.id, presenting: presRef.current });
       } else if (m.type === 'here' && m.to === id) {
-        add({ id: m.id, name: m.name }, true);
+        add({ id: m.id, name: m.name, presenting: !!m.presenting }, true);
+      } else if (m.type === 'present') {
+        const p = known.get(m.id);
+        if (p) {
+          known.set(m.id, { ...p, presenting: !!m.on });
+          setPeers([...known.values()]);
+          h.current.onPresent?.(p.name, !!m.on);
+        }
       } else if (m.type === 'bye') {
         const p = known.get(m.id);
         if (p) {
@@ -55,7 +64,7 @@ export function useRoom(code: string, name: string | null, handlers: Handlers) {
       }
     };
 
-    ch.postMessage({ type: 'hello', id, name });
+    ch.postMessage({ type: 'hello', id, name, presenting: presRef.current });
     const bye = () => ch.postMessage({ type: 'bye', id });
     window.addEventListener('pagehide', bye);
     return () => {
@@ -72,5 +81,10 @@ export function useRoom(code: string, name: string | null, handlers: Handlers) {
     chRef.current?.postMessage({ type: 'chat', id: idRef.current, name, text, msgId });
   }, [name]);
 
-  return { peers, messages, sendChat };
+  const setPresenting = useCallback((on: boolean) => {
+    presRef.current = on;
+    chRef.current?.postMessage({ type: 'present', id: idRef.current, on });
+  }, []);
+
+  return { peers, messages, sendChat, setPresenting };
 }
